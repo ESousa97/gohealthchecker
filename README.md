@@ -13,30 +13,26 @@ A concurrent, high-performance HTTP health checker written in Go. It monitors a 
 
 ## 🚀 How to Run and Test Manually
 
-To see the webhook integration in action without needing to create a real Discord/Slack bot right away, you can use a free, temporary webhook service like [Webhook.site](https://webhook.site/).
+The project is currently configured with a public test webhook right out of the box! You don't need to configure anything to see the alerts in action.
 
-### Step 1: Get a Test Webhook URL
-1. Go to [https://webhook.site/](https://webhook.site/)
-2. Copy your **"Your unique URL"** (it looks like `https://webhook.site/your-uuid-here`).
+### Step 1: Run the Application
 
-### Step 2: Run the Application
+Open your terminal at the root of the project and simply run:
 
-Open your terminal (PowerShell or Bash) at the root of the project and run the following command, replacing the URL with the one you copied:
-
-**Windows (PowerShell):**
-```powershell
-$env:WEBHOOK_URL="https://webhook.site/YOUR-UUID-HERE"; go run cmd/gohealthchecker/main.go
-```
-
-**Linux / macOS:**
 ```bash
-WEBHOOK_URL="https://webhook.site/YOUR-UUID-HERE" go run cmd/gohealthchecker/main.go
+go run cmd/gohealthchecker/main.go
 ```
 
-### Step 3: Observe the Results
-- Check your terminal output. You will see initial checks.
+### Step 2: Observe the Results
+- Check your terminal output. You will see the initial health checks running.
 - One of the URLs configured in `main.go` (`http://invalid.local.domain`) is guaranteed to fail.
-- After **10 seconds** (the second tick), you will see an `[ALERT]` log in the terminal, and if you look at your [Webhook.site](https://webhook.site/) dashboard, you will receive a real JSON payload containing the error!
+- After **10 seconds** (the second check), the system will trigger a JSON alert payload for the failing service.
+
+### Step 3: View the Alerts Live
+You can watch the webhook JSON payloads arriving in real-time on our temporary public dashboard:
+👉 **[Click here to view live Webhook Alerts on Webhook.site](https://webhook.site/#!/view/b739e3d1-fb2c-4a04-a6b3-72c5e3c09b96)**
+
+*(Note: If you want to use your own Discord or Slack webhook, simply pass it via the `WEBHOOK_URL` environment variable before running the command).*
 
 ---
 
