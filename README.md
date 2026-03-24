@@ -6,7 +6,7 @@
 
   <br>
 
-[![CI/CD](https://github.com/ESousa97/gohealthchecker/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/ESousa97/gohealthchecker/actions/workflows/ci.yml)
+[![CI/CD](https://github.com/ESousa97/gohealthchecker/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/ESousa97/gohealthchecker/actions/workflows/ci.yml)
 [![Go Report Card](https://goreportcard.com/badge/github.com/ESousa97/gohealthchecker)](https://goreportcard.com/report/github.com/ESousa97/gohealthchecker)
 [![Go Reference](https://pkg.go.dev/badge/github.com/ESousa97/gohealthchecker.svg)](https://pkg.go.dev/github.com/ESousa97/gohealthchecker)
 [![License: MIT](https://img.shields.io/github/license/ESousa97/gohealthchecker)](https://opensource.org/licenses/MIT)
