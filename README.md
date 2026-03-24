@@ -3,13 +3,13 @@
 A concurrent, high-performance HTTP health checker written in Go. It monitors a list of URLs and sends real-time webhook alerts (e.g., to Slack or Discord) when services go down or recover.
 
 ## Features
-- **TUI Dashboard:** A real-time terminal user interface (built with Bubble Tea) to monitor service status, latency, and check times visually.
-- **Concurrent Checks:** Uses Goroutines to monitor multiple endpoints simultaneously without blocking.
-- **Smart Alerting:** Only alerts after 2 consecutive failures to avoid false positives/network blips.
-- **Resilience & Retries:** Implements an internal 3-retry mechanism (with a 2-second delay) before a service is considered "failed" to bypass temporary network instabilities.
-- **Spam Prevention:** Maintains state in memory. If a service stays down, it won't spam your webhook.
-- **Recovery Notifications:** Automatically sends a "Recovery" alert when a failing service returns a `200 OK` status.
-- **Dynamic Configuration:** Reads the list of URLs and Webhook credentials dynamically from a `config.yaml` using Viper.
+- **TUI Dashboard:** A real-time Terminal User Interface (built with Bubble Tea) to monitor service status, latency, and check times visually.
+- **Concurrent Checks:** Utilizes Goroutines to monitor multiple endpoints simultaneously without blocking.
+- **Smart Alerting:** Alerts only after 2 consecutive failures to avoid false positives from temporary network blips.
+- **Resilience & Retries:** Implements an internal 3-retry mechanism (with a 2-second delay) before a service is marked as "failed" to mitigate transient network issues.
+- **Spam Prevention:** Maintains an in-memory state; if a service remains down, it will not spam the configured webhook.
+- **Recovery Notifications:** Automatically sends a "Recovery" alert once a failing service returns a `200 OK` status.
+- **Dynamic Configuration:** Dynamically reads the URL list and Webhook credentials from a `config.yaml` file using Viper.
 
 ---
 
