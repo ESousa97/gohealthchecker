@@ -3,6 +3,7 @@
 A concurrent, high-performance HTTP health checker written in Go. It monitors a list of URLs and sends real-time webhook alerts (e.g., to Slack or Discord) when services go down or recover.
 
 ## Features
+- **TUI Dashboard:** A real-time terminal user interface (built with Bubble Tea) to monitor service status, latency, and check times visually.
 - **Concurrent Checks:** Uses Goroutines to monitor multiple endpoints simultaneously without blocking.
 - **Smart Alerting:** Only alerts after 2 consecutive failures to avoid false positives/network blips.
 - **Resilience & Retries:** Implements an internal 3-retry mechanism (with a 2-second delay) before a service is considered "failed" to bypass temporary network instabilities.
@@ -14,31 +15,21 @@ A concurrent, high-performance HTTP health checker written in Go. It monitors a 
 
 ## 🚀 How to Run and Test Manually
 
-The project uses a `config.yaml` file to define settings. By default, it's configured with a public test webhook! You don't need to change anything to see the alerts in action.
-
-### Step 1: Check your `config.yaml`
-```yaml
-webhook_url: "https://webhook.site/b739e3d1-fb2c-4a04-a6b3-72c5e3c09b96"
-check_interval: "10s"
-targets:
-  - "https://www.google.com"
-  - "https://pkg.go.dev"
-  - "https://httpstat.us/404"
-  - "http://invalid.local.domain"
-```
-
-### Step 2: Run the Application
-
-Open your terminal at the root of the project and simply run:
-
+### Step 1: Run the Application
+Open your terminal and run:
 ```bash
 go run cmd/gohealthchecker/main.go
 ```
 
-### Step 2: Observe the Results
-- Check your terminal output. You will see the initial health checks running.
-- One of the URLs configured in `main.go` (`http://invalid.local.domain`) is guaranteed to fail.
-- After **10 seconds** (the second check), the system will trigger a JSON alert payload for the failing service.
+### Step 2: Observe the Dashboard
+The application will launch a visual dashboard in your terminal:
+- **Service URL:** The endpoint being monitored.
+- **Status:** Shows `✅ OK` (200 OK) or `❌ FAIL` (error/non-200).
+- **Latency:** The time it took to get the response.
+- **Last Check:** Timestamp of the last health check.
+
+You can navigate through the rows or press **'q'** to exit.
+
 
 ### Step 3: View the Alerts Live
 You can watch the webhook JSON payloads arriving in real-time on our temporary public dashboard:

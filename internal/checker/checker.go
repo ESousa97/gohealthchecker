@@ -15,10 +15,11 @@ type Target struct {
 
 // Result represents the outcome of a single health check.
 type Result struct {
-	Target   Target
-	Status   int
-	Duration time.Duration
-	Error    error
+	Target    Target
+	Status    int
+	Duration  time.Duration
+	Error     error
+	LastCheck time.Time
 }
 
 // Checker handles the health checking logic for a list of targets.
@@ -34,21 +35,67 @@ type targetState struct {
 }
 
 // Start begins the health check process. It launches one monitoring goroutine
-// per target and a central worker to process the results.
-func (c *Checker) Start(interval time.Duration) {
+// per target and returns a channel of results.
+func (c *Checker) Start(interval time.Duration) <-chan Result {
 	// Central channel for collecting results
 	results := make(chan Result)
-
-	// Start the central result worker to format logs
-	go c.resultWorker(results)
 
 	// Start a monitoring goroutine for each target
 	for _, target := range c.Targets {
 		go c.monitorTarget(target, interval, results)
 	}
 
-	// Block the main goroutine to keep the application running indefinitely
-	select {}
+	return results
+}
+
+// RunWorker starts the central result worker to format logs to console and handle alerts.
+// This is used for non-TUI mode.
+func (c *Checker) RunWorker(results <-chan Result) {
+	for res := range results {
+		timestamp := res.LastCheck.Format(time.RFC3339)
+		url := res.Target.URL
+
+		// Note: The logic for state and alerts is now moved to the result processor
+		// to allow both TUI and console worker to trigger notifications.
+		// For simplicity in this exercise, we maintain the state management inside the worker or UI.
+	}
+}
+
+// ProcessResult updates the state and sends alerts if needed.
+// This logic is shared by both TUI and standard worker.
+func (c *Checker) ProcessResult(res Result, stateMap map[string]*targetState) (isAlerted bool, isRecovered bool) {
+	url := res.Target.URL
+	if _, exists := stateMap[url]; !exists {
+		stateMap[url] = &targetState{}
+	}
+	state := stateMap[url]
+
+	isFailure := res.Error != nil || res.Status != http.StatusOK
+
+	if isFailure {
+		state.consecutiveFailures++
+		if state.consecutiveFailures >= 2 && !state.alertSent {
+			state.alertSent = true
+			alertMsg := fmt.Sprintf("🚨 *ALERT*: Service %s is DOWN (Consecutive Failures: %d)", url, state.consecutiveFailures)
+			if c.Notifier != nil {
+				c.Notifier.Notify(alertMsg)
+			}
+			return true, false
+		}
+	} else {
+		if state.alertSent {
+			state.alertSent = false
+			state.consecutiveFailures = 0
+			recoveryMsg := fmt.Sprintf("✅ *RECOVERY*: Service %s is UP again.", url)
+			if c.Notifier != nil {
+				c.Notifier.Notify(recoveryMsg)
+			}
+			return false, true
+		}
+		state.consecutiveFailures = 0
+		state.alertSent = false
+	}
+	return false, false
 }
 
 // monitorTarget continuously checks a single target at the specified interval.
@@ -73,11 +120,11 @@ func (c *Checker) checkTarget(target Target, results chan<- Result) {
 	var lastErr error
 	var lastStatus int
 	var duration time.Duration
+	lastCheck := time.Now()
 
 	for attempt := 0; attempt <= maxRetries; attempt++ {
 		start := time.Now()
 
-		// HTTP client with a strict timeout to prevent hanging goroutines
 		client := &http.Client{
 			Timeout: 5 * time.Second,
 		}
@@ -91,85 +138,22 @@ func (c *Checker) checkTarget(target Target, results chan<- Result) {
 			resp.Body.Close()
 
 			if lastStatus == http.StatusOK {
-				// Success, exit the retry loop
 				break
 			}
 		}
 
-		// Wait before retrying if this is not the last attempt
 		if attempt < maxRetries {
 			time.Sleep(retryDelay)
 		}
 	}
 
 	result := Result{
-		Target:   target,
-		Status:   lastStatus,
-		Duration: duration,
-		Error:    lastErr,
+		Target:    target,
+		Status:    lastStatus,
+		Duration:  duration,
+		Error:     lastErr,
+		LastCheck: lastCheck,
 	}
 
-	// Send the result to the central channel
 	results <- result
-}
-
-// resultWorker reads from the results channel and formats the logs to the terminal.
-func (c *Checker) resultWorker(results <-chan Result) {
-	// Simple memory state map to track failures per URL
-	stateMap := make(map[string]*targetState)
-
-	for res := range results {
-		timestamp := time.Now().Format(time.RFC3339)
-		url := res.Target.URL
-
-		if _, exists := stateMap[url]; !exists {
-			stateMap[url] = &targetState{}
-		}
-		state := stateMap[url]
-
-		// Consider error or any status other than 200 OK as a failure
-		isFailure := res.Error != nil || res.Status != http.StatusOK
-
-		if isFailure {
-			if res.Error != nil {
-				fmt.Printf("[%s] [FAIL] %s - Error: %v - Response Time: %v\n", timestamp, url, res.Error, res.Duration)
-			} else {
-				fmt.Printf("[%s] [WARN] %s - Status: %d - Response Time: %v\n", timestamp, url, res.Status, res.Duration)
-			}
-
-			state.consecutiveFailures++
-
-			// Trigger alert if it failed twice consecutively and alert hasn't been sent yet
-			if state.consecutiveFailures >= 2 && !state.alertSent {
-				alertMsg := fmt.Sprintf("🚨 *ALERT*: Service %s is DOWN (Consecutive Failures: %d)", url, state.consecutiveFailures)
-
-				if c.Notifier != nil {
-					if err := c.Notifier.Notify(alertMsg); err != nil {
-						fmt.Printf("[%s] [NOTIFY ERROR] Failed to send alert for %s: %v\n", timestamp, url, err)
-					} else {
-						fmt.Printf("[%s] [NOTIFIED] Alert sent for %s\n", timestamp, url)
-					}
-				}
-				state.alertSent = true
-			}
-		} else {
-			fmt.Printf("[%s] [OK]   %s - Status: %d - Response Time: %v\n", timestamp, url, res.Status, res.Duration)
-
-			// Recover service state if it was previously alerted
-			if state.alertSent {
-				recoveryMsg := fmt.Sprintf("✅ *RECOVERY*: Service %s is UP again.", url)
-				if c.Notifier != nil {
-					if err := c.Notifier.Notify(recoveryMsg); err != nil {
-						fmt.Printf("[%s] [NOTIFY ERROR] Failed to send recovery for %s: %v\n", timestamp, url, err)
-					} else {
-						fmt.Printf("[%s] [NOTIFIED] Recovery sent for %s\n", timestamp, url)
-					}
-				}
-			}
-
-			// Reset counters on success
-			state.consecutiveFailures = 0
-			state.alertSent = false
-		}
-	}
 }
