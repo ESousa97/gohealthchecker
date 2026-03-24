@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"net/http"
 	"time"
+
+	"gohealthchecker/internal/notifier"
 )
 
 // Target represents an endpoint to be checked.
@@ -21,7 +23,14 @@ type Result struct {
 
 // Checker handles the health checking logic for a list of targets.
 type Checker struct {
-	Targets []Target
+	Targets  []Target
+	Notifier notifier.Notifier
+}
+
+// targetState holds the state for a single target to manage alerting and avoid spam.
+type targetState struct {
+	consecutiveFailures int
+	alertSent           bool
 }
 
 // Start begins the health check process. It launches one monitoring goroutine
@@ -85,14 +94,61 @@ func (c *Checker) checkTarget(target Target, results chan<- Result) {
 
 // resultWorker reads from the results channel and formats the logs to the terminal.
 func (c *Checker) resultWorker(results <-chan Result) {
+	// Simple memory state map to track failures per URL
+	stateMap := make(map[string]*targetState)
+
 	for res := range results {
 		timestamp := time.Now().Format(time.RFC3339)
-		if res.Error != nil {
-			fmt.Printf("[%s] [FAIL] %s - Error: %v - Response Time: %v\n", timestamp, res.Target.URL, res.Error, res.Duration)
-		} else if res.Status == http.StatusOK {
-			fmt.Printf("[%s] [OK]   %s - Status: %d - Response Time: %v\n", timestamp, res.Target.URL, res.Status, res.Duration)
+		url := res.Target.URL
+
+		if _, exists := stateMap[url]; !exists {
+			stateMap[url] = &targetState{}
+		}
+		state := stateMap[url]
+
+		// Consider error or any status other than 200 OK as a failure
+		isFailure := res.Error != nil || res.Status != http.StatusOK
+
+		if isFailure {
+			if res.Error != nil {
+				fmt.Printf("[%s] [FAIL] %s - Error: %v - Response Time: %v\n", timestamp, url, res.Error, res.Duration)
+			} else {
+				fmt.Printf("[%s] [WARN] %s - Status: %d - Response Time: %v\n", timestamp, url, res.Status, res.Duration)
+			}
+
+			state.consecutiveFailures++
+
+			// Trigger alert if it failed twice consecutively and alert hasn't been sent yet
+			if state.consecutiveFailures >= 2 && !state.alertSent {
+				alertMsg := fmt.Sprintf("🚨 *ALERT*: Service %s is DOWN (Consecutive Failures: %d)", url, state.consecutiveFailures)
+
+				if c.Notifier != nil {
+					if err := c.Notifier.Notify(alertMsg); err != nil {
+						fmt.Printf("[%s] [NOTIFY ERROR] Failed to send alert for %s: %v\n", timestamp, url, err)
+					} else {
+						fmt.Printf("[%s] [NOTIFIED] Alert sent for %s\n", timestamp, url)
+					}
+				}
+				state.alertSent = true
+			}
 		} else {
-			fmt.Printf("[%s] [WARN] %s - Status: %d - Response Time: %v\n", timestamp, res.Target.URL, res.Status, res.Duration)
+			fmt.Printf("[%s] [OK]   %s - Status: %d - Response Time: %v\n", timestamp, url, res.Status, res.Duration)
+
+			// Recover service state if it was previously alerted
+			if state.alertSent {
+				recoveryMsg := fmt.Sprintf("✅ *RECOVERY*: Service %s is UP again.", url)
+				if c.Notifier != nil {
+					if err := c.Notifier.Notify(recoveryMsg); err != nil {
+						fmt.Printf("[%s] [NOTIFY ERROR] Failed to send recovery for %s: %v\n", timestamp, url, err)
+					} else {
+						fmt.Printf("[%s] [NOTIFIED] Recovery sent for %s\n", timestamp, url)
+					}
+				}
+			}
+
+			// Reset counters on success
+			state.consecutiveFailures = 0
+			state.alertSent = false
 		}
 	}
 }
