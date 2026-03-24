@@ -17,7 +17,7 @@
 
 > **TUI Dashboard**: Visualize latency, status, and check times directly in your terminal.
 
-![TUI Screenshot](https://raw.githubusercontent.com/ESousa97/gohealthchecker/main/assets/tui-demo.png)
+![TUI Screenshot](https://github.com/ESousa97/gohealthchecker/blob/70b22313f0fc173f7d0ace0babe81a192fc636c7/assets/tui-demo.png)
 
 ### Example Usage (As a Library)
 ```go
