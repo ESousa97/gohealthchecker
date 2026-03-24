@@ -1,3 +1,5 @@
+// Package tui provides a Terminal User Interface (TUI) for real-time
+// monitoring of health check results using the Bubble Tea framework.
 package tui
 
 import (
@@ -91,7 +93,9 @@ func (m model) View() string {
 	return baseStyle.Render(m.table.View()) + "\n  Press 'q' to quit.\n"
 }
 
-// StartUI initializes and runs the Bubble Tea TUI.
+// StartUI initializes and runs the Bubble Tea TUI program.
+// It requires a [checker.Checker] and a channel of [checker.Result]s
+// to display and manage real-time updates.
 func StartUI(c *checker.Checker, results <-chan checker.Result) error {
 	columns := []table.Column{
 		{Title: "Service URL", Width: 40},

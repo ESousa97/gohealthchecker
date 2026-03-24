@@ -1,3 +1,5 @@
+// Package checker provides the core logic for concurrent HTTP health checks,
+// managing target states, retries, and alerting triggers.
 package checker
 
 import (
@@ -8,21 +10,23 @@ import (
 	"gohealthchecker/internal/notifier"
 )
 
-// Target represents an endpoint to be checked.
+// Target represents an endpoint to be monitored for health.
 type Target struct {
+	// URL is the full address of the endpoint (e.g., "https://api.example.com").
 	URL string
 }
 
-// Result represents the outcome of a single health check.
+// Result represents the outcome of a single health check execution.
 type Result struct {
-	Target    Target
-	Status    int
-	Duration  time.Duration
-	Error     error
-	LastCheck time.Time
+	Target    Target        // The target that was checked.
+	Status    int           // HTTP status code returned (e.g., 200).
+	Duration  time.Duration // Time taken to receive the response.
+	Error     error         // Any network or protocol error encountered.
+	LastCheck time.Time     // Timestamp of when the check was performed.
 }
 
-// Checker handles the health checking logic for a list of targets.
+// Checker manages the orchestration of health checks for a set of [Target]s.
+// It uses a [notifier.Notifier] to send alerts based on check outcomes.
 type Checker struct {
 	Targets  []Target
 	Notifier notifier.Notifier
@@ -34,8 +38,10 @@ type TargetState struct {
 	AlertSent           bool
 }
 
-// Start begins the health check process. It launches one monitoring goroutine
-// per target and returns a channel of results.
+// Start begins the health check process in the background.
+// It launches one monitoring goroutine per target and returns a channel
+// through which [Result]s are asynchronously delivered.
+// The checks repeat at the specified interval.
 func (c *Checker) Start(interval time.Duration) <-chan Result {
 	// Central channel for collecting results
 	results := make(chan Result)
@@ -69,8 +75,11 @@ func (c *Checker) RunWorker(results <-chan Result) {
 	}
 }
 
-// ProcessResult updates the state and sends alerts if needed.
-// This logic is shared by both TUI and standard worker.
+// ProcessResult evaluates a [Result] against the current [TargetState] to determine
+// if an alert or a recovery notification should be triggered.
+//
+// It returns isAlerted=true if a new failure alert was sent,
+// and isRecovered=true if a recovery notification was sent.
 func (c *Checker) ProcessResult(res Result, stateMap map[string]*TargetState) (isAlerted bool, isRecovered bool) {
 	url := res.Target.URL
 	if _, exists := stateMap[url]; !exists {

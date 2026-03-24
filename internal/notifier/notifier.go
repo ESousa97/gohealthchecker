@@ -1,3 +1,5 @@
+// Package notifier provides abstractions and implementations for sending
+// health check alerts to various destinations like Webhooks or Console.
 package notifier
 
 import (
@@ -8,17 +10,22 @@ import (
 	"time"
 )
 
-// Notifier defines the interface for sending alerts.
+// Notifier defines the common interface for sending alert notifications.
 type Notifier interface {
+	// Notify sends the given message to the notification destination.
+	// It returns an error if the delivery fails.
 	Notify(message string) error
 }
 
-// WebhookNotifier implements Notifier to send JSON payloads to a specific URL (like Slack or Discord).
+// WebhookNotifier implements the [Notifier] interface to send JSON payloads
+// to a specific URL, compatible with Slack, Discord, and others.
 type WebhookNotifier struct {
+	// URL is the destination endpoint for the HTTP POST request.
 	URL string
 }
 
-// WebhookPayload represents the standard JSON structure expected by Slack or Discord.
+// WebhookPayload represents the standard JSON structure expected by most
+// webhook consumers (like Slack or Discord).
 type WebhookPayload struct {
 	Content string `json:"content"`
 }

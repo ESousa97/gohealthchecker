@@ -1,0 +1,19 @@
+{
+  "version": "0.2",
+  "language": "en",
+  "words": [
+    "godoc",
+    "golangci",
+    "GOPATH",
+    "Enoque",
+    "enoquesousa",
+    "bubbletea",
+    "lipgloss",
+    "gohealthchecker"
+  ],
+  "ignorePaths": [
+    "go.sum",
+    "bin/**",
+    ".git/**"
+  ]
+}
