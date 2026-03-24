@@ -95,7 +95,7 @@ func (c *Checker) ProcessResult(res Result, stateMap map[string]*TargetState) (i
 			state.AlertSent = true
 			alertMsg := fmt.Sprintf("🚨 *ALERT*: Service %s is DOWN (Consecutive Failures: %d)", url, state.ConsecutiveFailures)
 			if c.Notifier != nil {
-				c.Notifier.Notify(alertMsg)
+				_ = c.Notifier.Notify(alertMsg)
 			}
 			return true, false
 		}
@@ -105,7 +105,7 @@ func (c *Checker) ProcessResult(res Result, stateMap map[string]*TargetState) (i
 			state.ConsecutiveFailures = 0
 			recoveryMsg := fmt.Sprintf("✅ *RECOVERY*: Service %s is UP again.", url)
 			if c.Notifier != nil {
-				c.Notifier.Notify(recoveryMsg)
+				_ = c.Notifier.Notify(recoveryMsg)
 			}
 			return false, true
 		}
