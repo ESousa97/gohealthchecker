@@ -2,7 +2,6 @@ package tui
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/charmbracelet/bubbles/table"
 	tea "github.com/charmbracelet/bubbletea"
@@ -18,7 +17,7 @@ type model struct {
 	table    table.Model
 	checker  *checker.Checker
 	results  <-chan checker.Result
-	stateMap map[string]*checker.targetState
+	stateMap map[string]*checker.TargetState
 }
 
 // Msg used to update the TUI when a result arrives
@@ -30,7 +29,11 @@ func (m model) Init() tea.Cmd {
 
 func (m model) waitForResult() tea.Cmd {
 	return func() tea.Msg {
-		return resultMsg(<-m.results)
+		res, ok := <-m.results
+		if !ok {
+			return nil
+		}
+		return resultMsg(res)
 	}
 }
 
@@ -119,7 +122,7 @@ func StartUI(c *checker.Checker, results <-chan checker.Result) error {
 		table:    t,
 		checker:  c,
 		results:  results,
-		stateMap: make(map[string]*checker.targetState),
+		stateMap: make(map[string]*checker.TargetState),
 	}
 
 	if _, err := tea.NewProgram(m).Run(); err != nil {

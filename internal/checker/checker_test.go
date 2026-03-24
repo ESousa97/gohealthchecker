@@ -27,7 +27,7 @@ func TestResultWorker_StateAndAlerts(t *testing.T) {
 	resultsChan := make(chan Result)
 
 	// Start the worker in a goroutine
-	go c.resultWorker(resultsChan)
+	go c.RunWorker(resultsChan)
 
 	targetURL := "http://test.local"
 	target := Target{URL: targetURL}

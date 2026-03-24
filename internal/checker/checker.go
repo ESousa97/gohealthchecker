@@ -28,10 +28,10 @@ type Checker struct {
 	Notifier notifier.Notifier
 }
 
-// targetState holds the state for a single target to manage alerting and avoid spam.
-type targetState struct {
-	consecutiveFailures int
-	alertSent           bool
+// TargetState holds the state for a single target to manage alerting and avoid spam.
+type TargetState struct {
+	ConsecutiveFailures int
+	AlertSent           bool
 }
 
 // Start begins the health check process. It launches one monitoring goroutine
@@ -51,49 +51,57 @@ func (c *Checker) Start(interval time.Duration) <-chan Result {
 // RunWorker starts the central result worker to format logs to console and handle alerts.
 // This is used for non-TUI mode.
 func (c *Checker) RunWorker(results <-chan Result) {
+	stateMap := make(map[string]*TargetState)
 	for res := range results {
 		timestamp := res.LastCheck.Format(time.RFC3339)
 		url := res.Target.URL
 
-		// Note: The logic for state and alerts is now moved to the result processor
-		// to allow both TUI and console worker to trigger notifications.
-		// For simplicity in this exercise, we maintain the state management inside the worker or UI.
+		// Process result for alerts
+		c.ProcessResult(res, stateMap)
+
+		if res.Error != nil {
+			fmt.Printf("[%s] [FAIL] %s - Error: %v - Response Time: %v\n", timestamp, url, res.Error, res.Duration)
+		} else if res.Status == http.StatusOK {
+			fmt.Printf("[%s] [OK]   %s - Status: %d - Response Time: %v\n", timestamp, url, res.Status, res.Duration)
+		} else {
+			fmt.Printf("[%s] [WARN] %s - Status: %d - Response Time: %v\n", timestamp, url, res.Status, res.Duration)
+		}
 	}
 }
 
 // ProcessResult updates the state and sends alerts if needed.
 // This logic is shared by both TUI and standard worker.
-func (c *Checker) ProcessResult(res Result, stateMap map[string]*targetState) (isAlerted bool, isRecovered bool) {
+func (c *Checker) ProcessResult(res Result, stateMap map[string]*TargetState) (isAlerted bool, isRecovered bool) {
 	url := res.Target.URL
 	if _, exists := stateMap[url]; !exists {
-		stateMap[url] = &targetState{}
+		stateMap[url] = &TargetState{}
 	}
 	state := stateMap[url]
 
 	isFailure := res.Error != nil || res.Status != http.StatusOK
 
 	if isFailure {
-		state.consecutiveFailures++
-		if state.consecutiveFailures >= 2 && !state.alertSent {
-			state.alertSent = true
-			alertMsg := fmt.Sprintf("🚨 *ALERT*: Service %s is DOWN (Consecutive Failures: %d)", url, state.consecutiveFailures)
+		state.ConsecutiveFailures++
+		if state.ConsecutiveFailures >= 2 && !state.AlertSent {
+			state.AlertSent = true
+			alertMsg := fmt.Sprintf("🚨 *ALERT*: Service %s is DOWN (Consecutive Failures: %d)", url, state.ConsecutiveFailures)
 			if c.Notifier != nil {
 				c.Notifier.Notify(alertMsg)
 			}
 			return true, false
 		}
 	} else {
-		if state.alertSent {
-			state.alertSent = false
-			state.consecutiveFailures = 0
+		if state.AlertSent {
+			state.AlertSent = false
+			state.ConsecutiveFailures = 0
 			recoveryMsg := fmt.Sprintf("✅ *RECOVERY*: Service %s is UP again.", url)
 			if c.Notifier != nil {
 				c.Notifier.Notify(recoveryMsg)
 			}
 			return false, true
 		}
-		state.consecutiveFailures = 0
-		state.alertSent = false
+		state.ConsecutiveFailures = 0
+		state.AlertSent = false
 	}
 	return false, false
 }
