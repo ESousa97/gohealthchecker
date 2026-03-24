@@ -1,0 +1,7 @@
+webhook_url: "https://webhook.site/b739e3d1-fb2c-4a04-a6b3-72c5e3c09b96"
+check_interval: "10s"
+targets:
+  - "https://www.google.com"
+  - "https://pkg.go.dev"
+  - "https://httpstat.us/404"
+  - "http://invalid.local.domain"

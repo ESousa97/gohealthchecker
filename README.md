@@ -5,17 +5,29 @@ A concurrent, high-performance HTTP health checker written in Go. It monitors a 
 ## Features
 - **Concurrent Checks:** Uses Goroutines to monitor multiple endpoints simultaneously without blocking.
 - **Smart Alerting:** Only alerts after 2 consecutive failures to avoid false positives/network blips.
+- **Resilience & Retries:** Implements an internal 3-retry mechanism (with a 2-second delay) before a service is considered "failed" to bypass temporary network instabilities.
 - **Spam Prevention:** Maintains state in memory. If a service stays down, it won't spam your webhook.
 - **Recovery Notifications:** Automatically sends a "Recovery" alert when a failing service returns a `200 OK` status.
-- **Fallback Console Logs:** If no webhook is provided, alerts are gracefully logged to the terminal.
+- **Dynamic Configuration:** Reads the list of URLs and Webhook credentials dynamically from a `config.yaml` using Viper.
 
 ---
 
 ## 🚀 How to Run and Test Manually
 
-The project is currently configured with a public test webhook right out of the box! You don't need to configure anything to see the alerts in action.
+The project uses a `config.yaml` file to define settings. By default, it's configured with a public test webhook! You don't need to change anything to see the alerts in action.
 
-### Step 1: Run the Application
+### Step 1: Check your `config.yaml`
+```yaml
+webhook_url: "https://webhook.site/b739e3d1-fb2c-4a04-a6b3-72c5e3c09b96"
+check_interval: "10s"
+targets:
+  - "https://www.google.com"
+  - "https://pkg.go.dev"
+  - "https://httpstat.us/404"
+  - "http://invalid.local.domain"
+```
+
+### Step 2: Run the Application
 
 Open your terminal at the root of the project and simply run:
 

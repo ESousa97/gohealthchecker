@@ -65,27 +65,48 @@ func (c *Checker) monitorTarget(target Target, interval time.Duration, results c
 }
 
 // checkTarget makes an HTTP GET request to a single target and sends the outcome to the results channel.
+// Implements retry logic: if a check fails, it retries up to 3 times with a 2-second delay.
 func (c *Checker) checkTarget(target Target, results chan<- Result) {
-	start := time.Now()
+	const maxRetries = 3
+	const retryDelay = 2 * time.Second
 
-	// HTTP client with a strict timeout to prevent hanging goroutines (network timeouts handling)
-	client := &http.Client{
-		Timeout: 5 * time.Second,
+	var lastErr error
+	var lastStatus int
+	var duration time.Duration
+
+	for attempt := 0; attempt <= maxRetries; attempt++ {
+		start := time.Now()
+
+		// HTTP client with a strict timeout to prevent hanging goroutines
+		client := &http.Client{
+			Timeout: 5 * time.Second,
+		}
+
+		resp, err := client.Get(target.URL)
+		duration = time.Since(start)
+
+		lastErr = err
+		if err == nil {
+			lastStatus = resp.StatusCode
+			resp.Body.Close()
+
+			if lastStatus == http.StatusOK {
+				// Success, exit the retry loop
+				break
+			}
+		}
+
+		// Wait before retrying if this is not the last attempt
+		if attempt < maxRetries {
+			time.Sleep(retryDelay)
+		}
 	}
-
-	resp, err := client.Get(target.URL)
-	duration := time.Since(start)
 
 	result := Result{
 		Target:   target,
+		Status:   lastStatus,
 		Duration: duration,
-		Error:    err,
-	}
-
-	if err == nil {
-		result.Status = resp.StatusCode
-		// Always close the response body to avoid resource leaks
-		resp.Body.Close()
+		Error:    lastErr,
 	}
 
 	// Send the result to the central channel
