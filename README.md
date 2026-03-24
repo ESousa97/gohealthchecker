@@ -105,13 +105,6 @@ The application uses `config.yaml` or environment variables via Viper.
 - [x] **Phase 4: Configuration and Resilience** - Viper integration (YAML) and retry logic (3 retries).
 - [x] **Phase 5: Observability and TUI** - Interactive visual terminal dashboard with Bubble Tea.
 
-### Next Steps 🚀
-
-- [ ] Support for Telegram and Email notifications
-- [ ] Metric export for Prometheus
-- [ ] SSL/TLS certificate verification support
-- [ ] Persistent uptime history (SQLite)
-
 ## Contributing
 
 Contributions are welcome! See the full guide at [CONTRIBUTING.md](CONTRIBUTING.md).
