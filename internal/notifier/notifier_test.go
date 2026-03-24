@@ -13,12 +13,12 @@ func TestWebhookNotifier_Notify_Success(t *testing.T) {
 		if r.Method != http.MethodPost {
 			t.Errorf("Expected method POST, got %s", r.Method)
 		}
-		
+
 		var payload WebhookPayload
 		if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
 			t.Errorf("Failed to decode request body: %v", err)
 		}
-		
+
 		if payload.Content != "test message" {
 			t.Errorf("Expected content 'test message', got '%s'", payload.Content)
 		}
@@ -28,7 +28,7 @@ func TestWebhookNotifier_Notify_Success(t *testing.T) {
 	defer mockServer.Close()
 
 	notifier := &WebhookNotifier{URL: mockServer.URL}
-	
+
 	err := notifier.Notify("test message")
 	if err != nil {
 		t.Fatalf("Expected no error, got: %v", err)
@@ -43,7 +43,7 @@ func TestWebhookNotifier_Notify_Failure(t *testing.T) {
 	defer mockServer.Close()
 
 	notifier := &WebhookNotifier{URL: mockServer.URL}
-	
+
 	err := notifier.Notify("test message")
 	if err == nil {
 		t.Fatal("Expected an error for status 500, but got nil")

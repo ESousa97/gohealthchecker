@@ -19,13 +19,13 @@ func (m *MockNotifier) Notify(message string) error {
 
 func TestResultWorker_StateAndAlerts(t *testing.T) {
 	mockNotifier := &MockNotifier{}
-	
+
 	c := &Checker{
 		Notifier: mockNotifier,
 	}
 
 	resultsChan := make(chan Result)
-	
+
 	// Start the worker in a goroutine
 	go c.resultWorker(resultsChan)
 

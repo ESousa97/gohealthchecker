@@ -23,16 +23,15 @@ func main() {
 	// Initialize the Notifier
 	// You can pass the webhook URL via the environment variable WEBHOOK_URL
 	webhookURL := os.Getenv("WEBHOOK_URL")
-	var n notifier.Notifier
-
-	if webhookURL != "" {
-		n = &notifier.WebhookNotifier{URL: webhookURL}
-		fmt.Println("Webhook notifier enabled.")
-	} else {
-		// Use ConsoleNotifier as a fallback for demonstration purposes
-		n = &notifier.ConsoleNotifier{}
-		fmt.Println("Webhook URL not set. Using ConsoleNotifier. Set WEBHOOK_URL environment variable to enable webhooks.")
+	if webhookURL == "" {
+		// Use a public test webhook as fallback for demonstration purposes
+		webhookURL = "https://webhook.site/b739e3d1-fb2c-4a04-a6b3-72c5e3c09b96"
+		fmt.Println("Webhook URL not set. Using public test webhook:", webhookURL)
 	}
+
+	var n notifier.Notifier
+	n = &notifier.WebhookNotifier{URL: webhookURL}
+	fmt.Println("Webhook notifier enabled.")
 
 	// Initialize the checker service.
 	c := checker.Checker{
