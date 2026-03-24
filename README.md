@@ -1,25 +1,26 @@
-# GoHealthChecker
+<div align="center">
+  <h1>gohealthchecker</h1>
+  <p>Concurrent and high-performance HTTP health monitoring with a real-time TUI dashboard.</p>
 
-> Concurrent and high-performance HTTP health monitoring with a real-time TUI dashboard.
+  <img src="assets/tui-demo.png" alt="GoHealthChecker Banner" width="600px">
 
-![CI](https://github.com/ESousa97/gohealthchecker/actions/workflows/ci.yml/badge.svg)
-![Go Report Card](https://goreportcard.com/badge/github.com/ESousa97/gohealthchecker)
-![Go Reference](https://pkg.go.dev/badge/github.com/ESousa97/gohealthchecker.svg)
-![License](https://img.shields.io/github/license/ESousa97/gohealthchecker)
-![Go Version](https://img.shields.io/github/go-mod/go-version/ESousa97/gohealthchecker)
-![Last Commit](https://img.shields.io/github/last-commit/ESousa97/gohealthchecker)
+  <br>
+
+[![CI/CD](https://github.com/ESousa97/gohealthchecker/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/ESousa97/gohealthchecker/actions/workflows/ci.yml)
+[![Go Report Card](https://goreportcard.com/badge/github.com/ESousa97/gohealthchecker)](https://goreportcard.com/report/github.com/ESousa97/gohealthchecker)
+[![Go Reference](https://pkg.go.dev/badge/github.com/ESousa97/gohealthchecker.svg)](https://pkg.go.dev/github.com/ESousa97/gohealthchecker)
+[![License: MIT](https://img.shields.io/github/license/ESousa97/gohealthchecker)](https://opensource.org/licenses/MIT)
+[![Go Version](https://img.shields.io/github/go-mod/go-version/ESousa97/gohealthchecker)](https://github.com/ESousa97/gohealthchecker)
+[![Last Commit](https://img.shields.io/github/last-commit/ESousa97/gohealthchecker)](https://github.com/ESousa97/gohealthchecker/commits/main)
+
+</div>
 
 ---
 
 `gohealthchecker` is a CLI tool written in Go designed to monitor HTTP endpoints concurrently. It provides a visual dashboard in the terminal (TUI) and sends automatic alerts via Webhooks when services go offline or recover, mitigating false positives through intelligent retries.
 
-## Demonstration
-
-> **TUI Dashboard**: Visualize latency, status, and check times directly in your terminal.
-
-![TUI Screenshot](https://github.com/ESousa97/gohealthchecker/blob/70b22313f0fc173f7d0ace0babe81a192fc636c7/assets/tui-demo.png)
-
 ### Example Usage (As a Library)
+
 ```go
 c := checker.Checker{
     Targets:  []checker.Target{{URL: "https://google.com"}},
@@ -30,12 +31,12 @@ results := c.Start(5 * time.Second)
 
 ## Tech Stack
 
-| Technology | Role |
-| --- | --- |
-| Go 1.25+ | Core language and concurrent execution |
-| Bubble Tea | TUI framework for the visual dashboard |
-| Viper | Dynamic configuration management (YAML/Env) |
-| Lip Gloss | Advanced terminal styling |
+| Technology | Role                                        |
+| ---------- | ------------------------------------------- |
+| Go 1.25+   | Core language and concurrent execution      |
+| Bubble Tea | TUI framework for the visual dashboard      |
+| Viper      | Dynamic configuration management (YAML/Env) |
+| Lip Gloss  | Advanced terminal styling                   |
 
 ## Prerequisites
 
@@ -63,14 +64,14 @@ make run
 
 ## Makefile Targets
 
-| Target | Description |
-| --- | --- |
-| `make build` | Compiles the binary to `bin/gohealthchecker` |
-| `make run` | Runs the application via `go run` |
-| `make test` | Runs all unit tests |
-| `make lint` | Performs static analysis with golangci-lint |
-| `make clean` | Removes build artifacts and temporary files |
-| `make install` | Installs the binary to your `GOPATH/bin` |
+| Target         | Description                                  |
+| -------------- | -------------------------------------------- |
+| `make build`   | Compiles the binary to `bin/gohealthchecker` |
+| `make run`     | Runs the application via `go run`            |
+| `make test`    | Runs all unit tests                          |
+| `make lint`    | Performs static analysis with golangci-lint  |
+| `make clean`   | Removes build artifacts and temporary files  |
+| `make install` | Installs the binary to your `GOPATH/bin`     |
 
 ## Architecture
 
@@ -88,20 +89,28 @@ Detailed documentation of the API and internal packages can be found at [pkg.go.
 
 The application uses `config.yaml` or environment variables via Viper.
 
-| Variable | Description | Type | Default |
-| --- | --- | --- | --- |
-| `WEBHOOK_URL` | Webhook URL for alerts (Slack/Discord) | String | "" |
-| `CHECK_INTERVAL`| Interval between checks (e.g., 30s) | Duration | 10s |
-| `targets` | List of URLs to monitor (in YAML) | Slice | [] |
+| Variable         | Description                            | Type     | Default |
+| ---------------- | -------------------------------------- | -------- | ------- |
+| `WEBHOOK_URL`    | Webhook URL for alerts (Slack/Discord) | String   | ""      |
+| `CHECK_INTERVAL` | Interval between checks (e.g., 30s)    | Duration | 10s     |
+| `targets`        | List of URLs to monitor (in YAML)      | Slice    | []      |
 
 ## Roadmap
 
 ### Completed ✅
+
 - [x] **Phase 1: Synchronized Monitor** - Basic check logic and loop with `time.Ticker`.
 - [x] **Phase 2: Concurrency with Channels** - Scaling with goroutines and a central results channel (Fan-out).
 - [x] **Phase 3: Notification Layer** - `Notifier` interface and Webhook alerts (Slack/Discord) with anti-spam.
 - [x] **Phase 4: Configuration and Resilience** - Viper integration (YAML) and retry logic (3 retries).
 - [x] **Phase 5: Observability and TUI** - Interactive visual terminal dashboard with Bubble Tea.
+
+### Next Steps 🚀
+
+- [ ] Support for Telegram and Email notifications
+- [ ] Metric export for Prometheus
+- [ ] SSL/TLS certificate verification support
+- [ ] Persistent uptime history (SQLite)
 
 ## Contributing
 
@@ -111,8 +120,20 @@ Contributions are welcome! See the full guide at [CONTRIBUTING.md](CONTRIBUTING.
 
 Distributed under the MIT License. See [LICENSE](LICENSE) for more details.
 
+<div align="center">
+
 ## Author
 
 **Enoque Sousa**
-- Portfolio: [enoquesousa.vercel.app](https://enoquesousa.vercel.app)
-- GitHub: [@ESousa97](https://github.com/ESousa97)
+
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=flat&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/enoque-sousa-bb89aa168/)
+[![GitHub](https://img.shields.io/badge/GitHub-100000?style=flat&logo=github&logoColor=white)](https://github.com/ESousa97)
+[![Portfolio](https://img.shields.io/badge/Portfolio-FF5722?style=flat&logo=target&logoColor=white)](https://enoquesousa.vercel.app)
+
+**[⬆ Back to top](#gohealthchecker)**
+
+Made with ❤️ by [Enoque Sousa](https://github.com/ESousa97)
+
+**Project Status:** Active — Study Project
+
+</div>
